@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Supplier;
 use App\Helpers\ExcelHelper;
 use Illuminate\Http\Request;
@@ -68,6 +69,12 @@ class UserController extends Controller
             $validated['supplier_id'] = null;
         }
 
+        // Set role_id berdasarkan role
+        $role = Role::where('name', $validated['role'])->first();
+        if ($role) {
+            $validated['role_id'] = $role->id;
+        }
+
         $validated['password'] = Hash::make($validated['password']);
 
         User::create($validated);
@@ -112,6 +119,12 @@ class UserController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
+        
+        // Update role_id berdasarkan role
+        $role = Role::where('name', $validated['role'])->first();
+        if ($role) {
+            $user->role_id = $role->id;
+        }
         
         // Update password jika diisi
         if (!empty($validated['password'])) {

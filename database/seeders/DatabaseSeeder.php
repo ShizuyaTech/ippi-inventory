@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Material;
 use App\Models\Supplier;
 use App\Models\Customer;
@@ -14,6 +15,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Get roles (assumes roles migration has already run)
+        $adminRole = Role::where('name', 'admin')->first();
+        $staffRole = Role::where('name', 'staff')->first();
+        $supplierRole = Role::where('name', 'supplier')->first();
+
         // Create Suppliers first (needed for supplier users)
         $suppliers = [
             ['supplier_code' => 'SUP001', 'supplier_name' => 'PT. Steel Indonesia', 'contact_person' => 'Budi Santoso', 'phone' => '021-12345678', 'email' => 'budi@steelindonesia.com', 'address' => 'Jl. Industri No. 123', 'city' => 'Jakarta'],
@@ -33,6 +39,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@materialcontrol.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
+            'role_id' => $adminRole ? $adminRole->id : null,
         ]);
 
         // Staff User
@@ -41,6 +48,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'staff@materialcontrol.com',
             'password' => Hash::make('password'),
             'role' => 'staff',
+            'role_id' => $staffRole ? $staffRole->id : null,
         ]);
 
         // Supplier Users (one for each supplier)
@@ -49,6 +57,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'supplier@steelindonesia.com',
             'password' => Hash::make('password'),
             'role' => 'supplier',
+            'role_id' => $supplierRole ? $supplierRole->id : null,
             'supplier_id' => $supplierModels[0]->id,
         ]);
 
@@ -57,6 +66,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'supplier@metaljaya.com',
             'password' => Hash::make('password'),
             'role' => 'supplier',
+            'role_id' => $supplierRole ? $supplierRole->id : null,
             'supplier_id' => $supplierModels[1]->id,
         ]);
 
@@ -65,6 +75,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'supplier@primamaterial.com',
             'password' => Hash::make('password'),
             'role' => 'supplier',
+            'role_id' => $supplierRole ? $supplierRole->id : null,
             'supplier_id' => $supplierModels[2]->id,
         ]);
 
