@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
-use App\Exports\CustomersExport;
-use App\Exports\CustomersTemplateExport;
-use App\Imports\CustomersImport;
+use App\Helpers\ExcelHelper;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Validator;
 
 class CustomerController extends Controller
 {
@@ -92,12 +90,72 @@ class CustomerController extends Controller
 
     public function export()
     {
-        return Excel::download(new CustomersExport, 'customers_' . date('YmdHis') . '.xlsx');
+        $customers = Customer::all();
+        
+        $data = $customers->map(function($customer) {
+            return [
+                $customer->customer_code,
+                $customer->customer_name,
+                $customer->contact_person,
+                $customer->phone,
+                $customer->email,
+                $customer->address,
+                $customer->is_active ? 'Active' : 'Inactive',
+            ];
+        })->toArray();
+        
+        $headers = [
+            'Customer Code',
+            'Customer Name',
+            'Contact Person',
+            'Phone',
+            'Email',
+            'Address',
+            'Status',
+        ];
+        
+        return ExcelHelper::export($data, $headers, 'customers_' . date('YmdHis') . '.xlsx');
     }
 
     public function downloadTemplate()
     {
-        return Excel::download(new CustomersTemplateExport, 'customers_import_template.xlsx');
+        $headers = [
+            'customer_code',
+            'customer_name',
+            'contact_person',
+            'phone',
+            'email',
+            'address',
+            'city',
+            'status'
+        ];
+        
+        $columnWidths = [15, 30, 20, 15, 30, 40, 15, 12];
+        
+        $sampleData = [
+            [
+                'CUST-001',
+                'PT Industri Otomotif',
+                'Dewi Kartika',
+                '021-9998888',
+                'dewi@otomotif.com',
+                'Jl. Otomotif No. 999, Jakarta',
+                'Jakarta',
+                'Active'
+            ],
+            [
+                'CUST-002',
+                'CV Elektronik Maju',
+                'Eko Prasetyo',
+                '022-7776655',
+                'eko@elektronikmaju.com',
+                'Jl. Elektronik No. 88, Bandung',
+                'Bandung',
+                'Active'
+            ],
+        ];
+        
+        return ExcelHelper::createTemplate($headers, 'customers_import_template.xlsx', $columnWidths, $sampleData);
     }
 
     public function import(Request $request)
@@ -107,9 +165,58 @@ class CustomerController extends Controller
         ]);
 
         try {
-            Excel::import(new CustomersImport, $request->file('file'));
+            $data = ExcelHelper::import($request->file('file'), 1);
+            
+            $errors = [];
+            $successCount = 0;
+            
+            foreach ($data as $index => $row) {
+                $rowNumber = $index + 2;
+                
+                // Skip empty rows
+                if (empty($row['customer_code']) && empty($row['customer_name'])) {
+                    continue;
+                }
+                
+                // Validate row
+                $validator = Validator::make($row, [
+                    'customer_code' => 'required|unique:customers,customer_code',
+                    'customer_name' => 'required',
+                    'email' => 'nullable|email',
+                ], [
+                    'customer_code.required' => 'Kode customer wajib diisi',
+                    'customer_code.unique' => 'Kode customer sudah ada',
+                    'customer_name.required' => 'Nama customer wajib diisi',
+                    'email.email' => 'Format email tidak valid',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = "Baris {$rowNumber}: " . implode(', ', $validator->errors()->all());
+                    continue;
+                }
+                
+                // Create customer
+                Customer::create([
+                    'customer_code' => trim($row['customer_code']),
+                    'customer_name' => trim($row['customer_name']),
+                    'contact_person' => isset($row['contact_person']) ? trim($row['contact_person']) : null,
+                    'phone' => isset($row['phone']) ? trim($row['phone']) : null,
+                    'email' => isset($row['email']) ? trim($row['email']) : null,
+                    'address' => isset($row['address']) ? trim($row['address']) : null,
+                    'city' => isset($row['city']) ? trim($row['city']) : null,
+                    'is_active' => !isset($row['status']) || strtolower(trim($row['status'])) === 'active',
+                ]);
+                
+                $successCount++;
+            }
+            
+            if (count($errors) > 0) {
+                return redirect()->route('customers.index')
+                    ->with('error', 'Import selesai dengan error: ' . implode(' | ', array_slice($errors, 0, 5)));
+            }
+            
             return redirect()->route('customers.index')
-                ->with('success', 'Customers berhasil diimport');
+                ->with('success', "{$successCount} customers berhasil diimport");
         } catch (\Exception $e) {
             return redirect()->route('customers.index')
                 ->with('error', 'Import gagal: ' . $e->getMessage());

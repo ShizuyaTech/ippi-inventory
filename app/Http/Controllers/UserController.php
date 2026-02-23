@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Supplier;
-use App\Exports\UsersExport;
+use App\Helpers\ExcelHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 
@@ -152,7 +151,29 @@ class UserController extends Controller
 
     public function export()
     {
-        return Excel::download(new UsersExport, 'users_' . date('YmdHis') . '.xlsx');
+        $users = User::all();
+        
+        $data = $users->map(function($user) {
+            return [
+                $user->name,
+                $user->email,
+                ucfirst($user->role),
+                $user->supplier ? $user->supplier->supplier_name : '-',
+                $user->is_active ? 'Active' : 'Inactive',
+                $user->created_at->format('Y-m-d H:i'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'Name',
+            'Email',
+            'Role',
+            'Supplier',
+            'Status',
+            'Created At',
+        ];
+        
+        return ExcelHelper::export($data, $headers, 'users_' . date('YmdHis') . '.xlsx');
     }
 
     public function exportPdf()

@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warehouse;
-use App\Exports\WarehousesExport;
-use App\Exports\WarehousesTemplateExport;
-use App\Imports\WarehousesImport;
+use App\Helpers\ExcelHelper;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Validator;
 
 class WarehouseController extends Controller
 {
@@ -84,12 +82,66 @@ class WarehouseController extends Controller
 
     public function export()
     {
-        return Excel::download(new WarehousesExport, 'warehouses_' . date('YmdHis') . '.xlsx');
+        $warehouses = Warehouse::all();
+        
+        $data = $warehouses->map(function($warehouse) {
+            return [
+                $warehouse->warehouse_code,
+                $warehouse->warehouse_name,
+                $warehouse->location,
+                $warehouse->capacity,
+                $warehouse->is_active ? 'Active' : 'Inactive',
+            ];
+        })->toArray();
+        
+        $headers = [
+            'Warehouse Code',
+            'Warehouse Name',
+            'Location',
+            'Capacity',
+            'Status',
+        ];
+        
+        return ExcelHelper::export($data, $headers, 'warehouses_' . date('YmdHis') . '.xlsx');
     }
 
     public function downloadTemplate()
     {
-        return Excel::download(new WarehousesTemplateExport, 'warehouses_import_template.xlsx');
+        $headers = [
+            'warehouse_code',
+            'warehouse_name',
+            'location',
+            'description',
+            'status'
+        ];
+        
+        $columnWidths = [15, 30, 40, 40, 12];
+        
+        $sampleData = [
+            [
+                'WH-001',
+                'Gudang Utama',
+                'Jl. Industri No. 10, Jakarta',
+                'Gudang utama untuk raw material',
+                'Active'
+            ],
+            [
+                'WH-002',
+                'Gudang Produksi',
+                'Jl. Raya Pabrik No. 5, Bekasi',
+                'Gudang khusus work in process',
+                'Active'
+            ],
+            [
+                'WH-003',
+                'Gudang Finished Goods',
+                'Jl. Logistik No. 20, Tangerang',
+                'Gudang penyimpanan produk jadi',
+                'Active'
+            ],
+        ];
+        
+        return ExcelHelper::createTemplate($headers, 'warehouses_import_template.xlsx', $columnWidths, $sampleData);
     }
 
     public function import(Request $request)
@@ -99,9 +151,53 @@ class WarehouseController extends Controller
         ]);
 
         try {
-            Excel::import(new WarehousesImport, $request->file('file'));
+            $data = ExcelHelper::import($request->file('file'), 1);
+            
+            $errors = [];
+            $successCount = 0;
+            
+            foreach ($data as $index => $row) {
+                $rowNumber = $index + 2;
+                
+                // Skip empty rows
+                if (empty($row['warehouse_code']) && empty($row['warehouse_name'])) {
+                    continue;
+                }
+                
+                // Validate row
+                $validator = Validator::make($row, [
+                    'warehouse_code' => 'required|unique:warehouses,warehouse_code',
+                    'warehouse_name' => 'required',
+                ], [
+                    'warehouse_code.required' => 'Kode warehouse wajib diisi',
+                    'warehouse_code.unique' => 'Kode warehouse sudah ada',
+                    'warehouse_name.required' => 'Nama warehouse wajib diisi',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = "Baris {$rowNumber}: " . implode(', ', $validator->errors()->all());
+                    continue;
+                }
+                
+                // Create warehouse
+                Warehouse::create([
+                    'warehouse_code' => trim($row['warehouse_code']),
+                    'warehouse_name' => trim($row['warehouse_name']),
+                    'location' => isset($row['location']) ? trim($row['location']) : null,
+                    'description' => isset($row['description']) ? trim($row['description']) : null,
+                    'is_active' => !isset($row['status']) || strtolower(trim($row['status'])) === 'active',
+                ]);
+                
+                $successCount++;
+            }
+            
+            if (count($errors) > 0) {
+                return redirect()->route('warehouses.index')
+                    ->with('error', 'Import selesai dengan error: ' . implode(' | ', array_slice($errors, 0, 5)));
+            }
+            
             return redirect()->route('warehouses.index')
-                ->with('success', 'Warehouses berhasil diimport');
+                ->with('success', "{$successCount} warehouses berhasil diimport");
         } catch (\Exception $e) {
             return redirect()->route('warehouses.index')
                 ->with('error', 'Import gagal: ' . $e->getMessage());
