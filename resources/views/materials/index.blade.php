@@ -88,39 +88,39 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Material</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Min Stock</th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                    <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                    <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Material</th>
+                    <th class="hidden sm:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
+                    <th class="hidden lg:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
+                    <th class="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock</th>
+                    <th class="hidden md:table-cell px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Min Stock</th>
+                    <th class="hidden sm:table-cell px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($materials as $material)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $material->material_code }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $material->material_name }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $material->category ?? '-' }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $material->unit_of_measure }}</td>
-                    <td class="px-6 py-4 text-sm text-right {{ $material->isLowStock() ? 'text-red-600 font-bold' : '' }}">
+                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm font-medium">{{ $material->material_code }}</td>
+                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm">{{ $material->material_name }}</td>
+                    <td class="hidden sm:table-cell px-3 md:px-6 py-4 text-xs md:text-sm">{{ $material->category ?? '-' }}</td>
+                    <td class="hidden lg:table-cell px-3 md:px-6 py-4 text-xs md:text-sm">{{ $material->unit_of_measure }}</td>
+                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-right {{ $material->isLowStock() ? 'text-red-600 font-bold' : '' }}">
                         {{ number_format($material->current_stock, 2) }}
                     </td>
-                    <td class="px-6 py-4 text-sm text-right">{{ number_format($material->minimum_stock, 2) }}</td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="hidden md:table-cell px-3 md:px-6 py-4 text-xs md:text-sm text-right">{{ number_format($material->minimum_stock, 2) }}</td>
+                    <td class="hidden sm:table-cell px-3 md:px-6 py-4 text-center">
                         @if($material->is_active)
                             <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Aktif</span>
                         @else
                             <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-800">Nonaktif</span>
                         @endif
                     </td>
-                    <td class="px-6 py-4 text-center whitespace-nowrap text-sm">
-                        <a href="{{ route('materials.show', $material) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                    <td class="px-3 md:px-6 py-4 text-center whitespace-nowrap text-xs md:text-sm">
+                        <a href="{{ route('materials.show', $material) }}" class="text-blue-600 hover:text-blue-900 mr-2 md:mr-3">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="{{ route('materials.edit', $material) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
+                        <a href="{{ route('materials.edit', $material) }}" class="text-yellow-600 hover:text-yellow-900 mr-2 md:mr-3">
                             <i class="fas fa-edit"></i>
                         </a>
                         <form action="{{ route('materials.destroy', $material) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
@@ -134,7 +134,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">Belum ada data material</td>
+                    <td colspan="8" class="px-3 md:px-6 py-4 text-center text-gray-500 text-xs md:text-sm">Belum ada data material</td>
                 </tr>
                 @endforelse
             </tbody>

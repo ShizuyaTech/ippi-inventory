@@ -8,14 +8,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100">
+    <!-- Mobile Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
+
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 bg-blue-900 text-white flex-shrink-0 flex flex-col h-screen">
-            <div class="p-4 border-b border-blue-800">
-                <h1 class="text-xl font-bold">
-                    <i class="fas fa-warehouse mr-2"></i>Material Control
-                </h1>
-                <p class="text-xs text-blue-300 mt-1">Stamping Manufacturing</p>
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-blue-900 text-white flex-shrink-0 flex flex-col h-screen z-40">
+            <div class="p-4 border-b border-blue-800 flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold">
+                        <i class="fas fa-warehouse mr-2"></i>Material Control
+                    </h1>
+                    <p class="text-xs text-blue-300 mt-1">Stamping Manufacturing</p>
+                </div>
+                <!-- Close button for mobile -->
+                <button id="close-sidebar" class="lg:hidden text-white hover:text-gray-300 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
             
             <nav class="flex-1 overflow-y-auto p-4 scrollbar-hide">
@@ -172,6 +181,44 @@
         </style>
 
         <script>
+            // Mobile sidebar toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const closeSidebarButton = document.getElementById('close-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            function openSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', openSidebar);
+            }
+
+            if (closeSidebarButton) {
+                closeSidebarButton.addEventListener('click', closeSidebar);
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+
+            // Close sidebar on window resize to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    closeSidebar();
+                }
+            });
+
+            // Dropdown toggle function
             function toggleDropdown(menuId) {
                 const menu = document.getElementById(menuId + '-menu');
                 const icon = document.getElementById(menuId + '-icon');
@@ -221,16 +268,23 @@
         </script>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col overflow-hidden w-full">
             <!-- Top Bar -->
-            <header class="bg-white shadow-sm px-6 py-4">
+            <header class="bg-white shadow-sm px-4 md:px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h2>
                     <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-600">
-                            <i class="fas fa-user-circle mr-2"></i>{{ auth()->user()->name }}
+                        <!-- Mobile menu button -->
+                        <button id="mobile-menu-button" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h2 class="text-lg md:text-xl font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h2>
+                    </div>
+                    <div class="flex items-center space-x-2 md:space-x-4">
+                        <span class="text-xs md:text-sm text-gray-600">
+                            <i class="fas fa-user-circle mr-1 md:mr-2"></i>
+                            <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
                             @if(auth()->user()->isSupplier() && auth()->user()->supplier)
-                                <span class="text-xs text-gray-500">({{ auth()->user()->supplier->supplier_name }})</span>
+                                <span class="hidden md:inline text-xs text-gray-500">({{ auth()->user()->supplier->supplier_name }})</span>
                             @endif
                         </span>
                     </div>
@@ -238,7 +292,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
                 @if(session('success'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                         <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
