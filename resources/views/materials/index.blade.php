@@ -5,39 +5,41 @@
 
 @section('content')
 <div class="mb-6">
-    <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
-        <form action="{{ route('materials.index') }}" method="GET" class="flex gap-2 flex-1 lg:max-w-md">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari material..." 
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+    <div class="flex gap-2 items-center">
+        <!-- Search Form -->
+        <form action="{{ route('materials.index') }}" method="GET" class="flex gap-1 flex-1">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari..." 
+                class="flex-1 min-w-0 px-2 lg:px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Cari">
                 <i class="fas fa-search"></i>
             </button>
             @if(request('search'))
-                <a href="{{ route('materials.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                <a href="{{ route('materials.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Reset">
                     <i class="fas fa-times"></i>
                 </a>
             @endif
         </form>
         
-        <div class="flex gap-2 flex-wrap">
-        <a href="{{ route('materials.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center">
-            <i class="fas fa-plus mr-2"></i>Tambah Material
-        </a>
-        <!-- Import Button -->
-        <button onclick="document.getElementById('importModal').classList.remove('hidden')" 
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded inline-flex items-center">
-            <i class="fas fa-file-import mr-2"></i>Import Excel
-        </button>
-        
-        <!-- Export Excel -->
-        <a href="{{ route('materials.export') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded inline-flex items-center">
-            <i class="fas fa-file-excel mr-2"></i>Export Excel
-        </a>
-        
-        <!-- Export PDF -->
-        <a href="{{ route('materials.pdf') }}" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded inline-flex items-center">
-            <i class="fas fa-file-pdf mr-2"></i>Export PDF
-        </a>
+        <!-- Action Buttons -->
+        <div class="flex gap-1 lg:gap-2 flex-shrink-0">
+            <a href="{{ route('materials.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded inline-flex items-center" title="Tambah Material">
+                <i class="fas fa-plus"></i>
+                <span class="hidden lg:inline lg:ml-2">Tambah Material</span>
+            </a>
+            <button onclick="document.getElementById('importModal').classList.remove('hidden')" 
+                class="bg-green-600 hover:bg-green-700 text-white px-3 lg:px-4 py-2 rounded inline-flex items-center" title="Import Excel">
+                <i class="fas fa-file-import"></i>
+                <span class="hidden lg:inline lg:ml-2">Import Excel</span>
+            </button>
+            <a href="{{ route('materials.export') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 lg:px-4 py-2 rounded inline-flex items-center" title="Export Excel">
+                <i class="fas fa-file-excel"></i>
+                <span class="hidden lg:inline lg:ml-2">Export Excel</span>
+            </a>
+            <a href="{{ route('materials.pdf') }}" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-3 lg:px-4 py-2 rounded inline-flex items-center" title="Export PDF">
+                <i class="fas fa-file-pdf"></i>
+                <span class="hidden lg:inline lg:ml-2">Export PDF</span>
+            </a>
+        </div>
     </div>
 </div>
 

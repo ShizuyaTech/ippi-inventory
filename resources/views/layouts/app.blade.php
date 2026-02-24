@@ -13,7 +13,7 @@
 
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-blue-900 text-white flex-shrink-0 flex flex-col h-screen z-40">
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-blue-900 text-white flex-shrink-0 flex flex-col h-screen z-40 lg:z-0">
             <div class="p-4 border-b border-blue-800 flex justify-between items-center">
                 <div>
                     <h1 class="text-xl font-bold">
@@ -218,10 +218,25 @@
                     sidebarOverlay.addEventListener('click', closeSidebar);
                 }
 
+                // Close sidebar when clicking on navigation links on mobile
+                if (sidebar) {
+                    const navLinks = sidebar.querySelectorAll('nav a');
+                    navLinks.forEach(function(link) {
+                        link.addEventListener('click', function() {
+                            if (window.innerWidth < 1024) {
+                                closeSidebar();
+                            }
+                        });
+                    });
+                }
+
                 // Close sidebar on window resize to desktop
                 window.addEventListener('resize', function() {
                     if (window.innerWidth >= 1024) {
-                        closeSidebar();
+                        // On desktop, ensure mobile states are reset
+                        if (sidebar) sidebar.classList.add('-translate-x-full');
+                        if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+                        document.body.style.overflow = '';
                     }
                 });
 
@@ -276,7 +291,7 @@
         </script>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden w-full">
+        <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Bar -->
             <header class="bg-white shadow-sm px-4 md:px-6 py-4">
                 <div class="flex justify-between items-center">
