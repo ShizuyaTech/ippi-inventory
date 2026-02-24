@@ -4,11 +4,11 @@
 @section('page-title', 'Customer Master')
 
 @section('content')
-<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div class="flex-1 w-full md:w-auto">
-        <form action="{{ route('customers.index') }}" method="GET" class="flex gap-2">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari customer (kode, nama, email, telepon)..." 
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+        <form action="{{ route('customers.index') }}" method="GET" class="flex gap-2 flex-1 lg:max-w-md">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari customer..." 
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-search"></i>
             </button>
@@ -18,9 +18,8 @@
                 </a>
             @endif
         </form>
-    </div>
-    
-    <div class="flex gap-2 flex-wrap">
+        
+        <div class="flex gap-2 flex-wrap">
         <a href="{{ route('customers.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center">
             <i class="fas fa-plus mr-2"></i>Tambah Customer
         </a>
@@ -79,7 +78,68 @@
 </div>
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="overflow-x-auto">
+    <!-- Mobile Card View -->
+    <div class="block md:hidden p-4">
+        <div class="grid grid-cols-2 gap-3">
+        @forelse($customers as $customer)
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-3">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-xs text-gray-900 line-clamp-2">{{ $customer->customer_name }}</h3>
+                        <p class="text-xs text-gray-500 mt-1">{{ $customer->customer_code }}</p>
+                    </div>
+                    @if($customer->is_active)
+                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800 font-medium ml-1">Aktif</span>
+                    @else
+                        <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-800 font-medium ml-1">Nonaktif</span>
+                    @endif
+                </div>
+                <div class="space-y-1 text-xs mb-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Contact:</span>
+                        <span class="text-gray-900 font-medium truncate ml-1">{{ $customer->contact_person ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Phone:</span>
+                        <span class="text-gray-900 font-medium">{{ $customer->phone ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">City:</span>
+                        <span class="text-gray-900 font-medium">{{ $customer->city ?? '-' }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200">
+                    <a href="{{ route('customers.edit', $customer) }}" class="text-yellow-600 hover:text-yellow-800">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-2 text-center text-gray-500 py-8">
+            <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+            <p>Belum ada data customer</p>
+        </div>
+        @endforelse
+        </div>
+        
+        @if($customers->hasPages())
+        <div class="pt-4">
+            {{ $customers->links() }}
+        </div>
+        @endif
+    </div>
+    
+    <!-- Desktop Table View -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -127,10 +187,10 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
-    
-    <div class="px-6 py-4 bg-gray-50">
-        {{ $customers->links() }}
+        
+        <div class="px-6 py-4 bg-gray-50">
+            {{ $customers->links() }}
+        </div>
     </div>
 </div>
 @endsection

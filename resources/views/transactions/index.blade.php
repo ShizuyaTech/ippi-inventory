@@ -4,46 +4,103 @@
 @section('page-title', 'Stock Transaction')
 
 @section('content')
-<div class="mb-6">
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div class="w-full lg:max-w-md">
-            <form action="{{ route('transactions.index') }}" method="GET" class="flex gap-2">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari transaksi..." 
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="hidden" name="type" value="{{ request('type') }}">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                    <i class="fas fa-search"></i>
-                </button>
-                @if(request('search'))
-                    <a href="{{ route('transactions.index', ['type' => request('type')]) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
-                        <i class="fas fa-times"></i>
-                    </a>
-                @endif
-            </form>
-        </div>
+<div class="mb-6 space-y-3">
+    <div class="flex gap-2 items-center">
+        <form action="{{ route('transactions.index') }}" method="GET" class="flex gap-2 flex-1">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari transaksi..." 
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <input type="hidden" name="type" value="{{ request('type') }}">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                <i class="fas fa-search"></i>
+            </button>
+            @if(request('search'))
+                <a href="{{ route('transactions.index', ['type' => request('type')]) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    <i class="fas fa-times"></i>
+                </a>
+            @endif
+        </form>
         
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2">
             <a href="{{ route('transactions.index', ['type' => 'IN', 'search' => request('search')]) }}" 
-               class="px-4 py-2 rounded {{ request('type') == 'IN' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border' }}">
-                Stock IN
+               class="px-3 py-2 rounded text-sm {{ request('type') == 'IN' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border' }}">
+                IN
             </a>
             <a href="{{ route('transactions.index', ['type' => 'OUT', 'search' => request('search')]) }}" 
-               class="px-4 py-2 rounded {{ request('type') == 'OUT' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border' }}">
-                Stock OUT
-            </a>
-            <a href="{{ route('transactions.index', ['search' => request('search')]) }}" 
-               class="px-4 py-2 rounded {{ !request('type') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border' }}">
-                Semua
-            </a>
-            <a href="{{ route('transactions.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center">
-                <i class="fas fa-plus mr-2"></i>Transaksi Baru
+               class="px-3 py-2 rounded text-sm {{ request('type') == 'OUT' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border' }}">
+                OUT
             </a>
         </div>
+    </div>
+    
+    <div class="flex gap-2">
+        <a href="{{ route('transactions.index', ['search' => request('search')]) }}" 
+           class="px-4 py-2 rounded text-sm {{ !request('type') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border' }}">
+            Semua
+        </a>
+        <a href="{{ route('transactions.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center text-sm">
+            <i class="fas fa-plus mr-2"></i>Transaksi
+        </a>
     </div>
 </div>
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="overflow-x-auto">
+    <!-- Mobile Card View -->
+    <div class="block md:hidden p-4">
+        <div class="grid grid-cols-2 gap-3">
+        @forelse($transactions as $transaction)
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-3">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-xs text-gray-900">{{ $transaction->transaction_number }}</h3>
+                        <p class="text-xs text-gray-500 mt-1">{{ $transaction->transaction_date->format('d/m/Y') }}</p>
+                    </div>
+                    @if($transaction->transaction_type == 'IN')
+                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800 font-semibold ml-1">IN</span>
+                    @elseif($transaction->transaction_type == 'OUT')
+                        <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-semibold ml-1">OUT</span>
+                    @else
+                        <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-semibold ml-1">ADJ</span>
+                    @endif
+                </div>
+                <div class="space-y-1 text-xs mb-2">
+                    <div>
+                        <p class="text-gray-500">Material</p>
+                        <p class="text-gray-900 font-medium line-clamp-2">{{ $transaction->material->material_name }}</p>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Qty:</span>
+                        <span class="text-gray-900 font-semibold">{{ number_format($transaction->quantity, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Ref:</span>
+                        <span class="text-gray-900 truncate ml-1">{{ $transaction->reference_number ?? '-' }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-end pt-2 border-t border-gray-200">
+                    <a href="{{ route('transactions.show', $transaction) }}" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-eye mr-1"></i> Detail
+                    </a>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-2 text-center text-gray-500 py-8">
+            <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+            <p>Belum ada transaksi</p>
+        </div>
+        @endforelse
+        </div>
+        
+        @if($transactions->hasPages())
+        <div class="pt-4">
+            {{ $transactions->links() }}
+        </div>
+        @endif
+    </div>
+    
+    <!-- Desktop Table View -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -86,10 +143,10 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
-    
-    <div class="px-6 py-4 bg-gray-50">
-        {{ $transactions->links() }}
+        
+        <div class="px-6 py-4 bg-gray-50">
+            {{ $transactions->links() }}
+        </div>
     </div>
 </div>
 @endsection

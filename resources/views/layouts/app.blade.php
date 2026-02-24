@@ -22,7 +22,7 @@
                     <p class="text-xs text-blue-300 mt-1">Stamping Manufacturing</p>
                 </div>
                 <!-- Close button for mobile -->
-                <button id="close-sidebar" class="lg:hidden text-white hover:text-gray-300 focus:outline-none">
+                <button id="close-sidebar" class="lg:hidden text-white hover:text-gray-300 focus:outline-none p-2 rounded-md hover:bg-blue-800 active:bg-blue-700 transition-colors" aria-label="Close menu">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -181,61 +181,69 @@
         </style>
 
         <script>
-            // Mobile sidebar toggle
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const closeSidebarButton = document.getElementById('close-sidebar');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-            function openSidebar() {
-                sidebar.classList.remove('-translate-x-full');
-                sidebarOverlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeSidebar() {
-                sidebar.classList.add('-translate-x-full');
-                sidebarOverlay.classList.add('hidden');
-                document.body.style.overflow = '';
-            }
-
-            if (mobileMenuButton) {
-                mobileMenuButton.addEventListener('click', openSidebar);
-            }
-
-            if (closeSidebarButton) {
-                closeSidebarButton.addEventListener('click', closeSidebar);
-            }
-
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', closeSidebar);
-            }
-
-            // Close sidebar on window resize to desktop
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 1024) {
-                    closeSidebar();
-                }
-            });
-
-            // Dropdown toggle function
-            function toggleDropdown(menuId) {
-                const menu = document.getElementById(menuId + '-menu');
-                const icon = document.getElementById(menuId + '-icon');
-                
-                if (menu.style.display === 'none' || menu.style.display === '') {
-                    menu.style.display = 'block';
-                    icon.classList.remove('fa-chevron-right');
-                    icon.classList.add('fa-chevron-down');
-                } else {
-                    menu.style.display = 'none';
-                    icon.classList.remove('fa-chevron-down');
-                    icon.classList.add('fa-chevron-right');
-                }
-            }
-
-            // Initialize dropdowns as closed, then open only the active section
             document.addEventListener('DOMContentLoaded', function() {
+                // Mobile sidebar toggle
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                const closeSidebarButton = document.getElementById('close-sidebar');
+                const sidebar = document.getElementById('sidebar');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+                function openSidebar() {
+                    if (sidebar) sidebar.classList.remove('-translate-x-full');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeSidebar() {
+                    if (sidebar) sidebar.classList.add('-translate-x-full');
+                    if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+
+                if (mobileMenuButton) {
+                    mobileMenuButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openSidebar();
+                    });
+                }
+
+                if (closeSidebarButton) {
+                    closeSidebarButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        closeSidebar();
+                    });
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener('click', closeSidebar);
+                }
+
+                // Close sidebar on window resize to desktop
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth >= 1024) {
+                        closeSidebar();
+                    }
+                });
+
+                // Dropdown toggle function
+                window.toggleDropdown = function(menuId) {
+                    const menu = document.getElementById(menuId + '-menu');
+                    const icon = document.getElementById(menuId + '-icon');
+                    
+                    if (menu && icon) {
+                        if (menu.style.display === 'none' || menu.style.display === '') {
+                            menu.style.display = 'block';
+                            icon.classList.remove('fa-chevron-right');
+                            icon.classList.add('fa-chevron-down');
+                        } else {
+                            menu.style.display = 'none';
+                            icon.classList.remove('fa-chevron-down');
+                            icon.classList.add('fa-chevron-right');
+                        }
+                    }
+                };
+
+                // Initialize dropdowns
                 const menuIds = ['masterData', 'transaksi', 'sistem'];
                 
                 // First, close all menus
@@ -274,7 +282,7 @@
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-4">
                         <!-- Mobile menu button -->
-                        <button id="mobile-menu-button" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <button id="mobile-menu-button" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none p-2 -ml-2 rounded-md hover:bg-gray-100 active:bg-gray-200 transition-colors" aria-label="Open menu">
                             <i class="fas fa-bars text-xl"></i>
                         </button>
                         <h2 class="text-lg md:text-xl font-semibold text-gray-800">@yield('page-title', 'Dashboard')</h2>

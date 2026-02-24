@@ -5,7 +5,7 @@
 
 @section('content')
 <!-- Low Stock Statistics by Category -->
-<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
     <!-- Raw Material -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
@@ -78,58 +78,122 @@
 </div>
 
 <!-- Search and Filter Section -->
-<div class="bg-white rounded-lg shadow p-6 mb-6">
-    <form action="{{ route('all-stock') }}" method="GET">
-        <div class="flex flex-wrap gap-4 items-end">
-            <!-- Search -->
-            <div class="flex-1 min-w-[250px]">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                    placeholder="Cari kode, nama, kategori, lokasi..." 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            
-            <!-- Category Filter -->
-            <div class="w-48">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <select name="category" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Categories</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
-                            {{ $category }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <!-- Status Filter -->
-            <div class="w-40">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Status</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                </select>
-            </div>
-            
-            <!-- Buttons -->
-            <div class="flex gap-2">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded inline-flex items-center">
-                    <i class="fas fa-filter mr-2"></i>Apply
-                </button>
-                @if(request('search') || request('category') || request('status'))
-                    <a href="{{ route('all-stock') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded inline-flex items-center">
-                        <i class="fas fa-times mr-2"></i>Clear
-                    </a>
-                @endif
-            </div>
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <form action="{{ route('all-stock') }}" method="GET" class="flex flex-col md:flex-row gap-2 items-end">
+        <!-- Search -->
+        <div class="flex-1 w-full md:w-auto md:min-w-[200px]">
+            <input type="text" name="search" value="{{ request('search') }}" 
+                placeholder="Cari material..." 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <!-- Category Filter -->
+        <div class="w-full md:w-40">
+            <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Categories</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
+                        {{ $category }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="w-full md:w-32">
+            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
+        </div>
+        
+        <!-- Buttons -->
+        <div class="flex gap-2 w-full md:w-auto">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center">
+                <i class="fas fa-filter"></i>
+                <span class="ml-2 hidden lg:inline">Apply</span>
+            </button>
+            @if(request('search') || request('category') || request('status'))
+                <a href="{{ route('all-stock') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded inline-flex items-center">
+                    <i class="fas fa-times"></i>
+                    <span class="ml-2 hidden lg:inline">Clear</span>
+                </a>
+            @endif
         </div>
     </form>
 </div>
 
 <!-- Data Table -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="overflow-x-auto">
+    <!-- Mobile Card View (2 cards per row) -->
+    <div class="block md:hidden p-4">
+        <div class="grid grid-cols-2 gap-3">
+            @forelse($materials as $material)
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border {{ $material->current_stock <= $material->minimum_stock ? 'border-red-300' : 'border-gray-200' }}">
+                <div class="p-3">
+                    <div class="mb-2">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                            {{ $material->category == 'Raw Material' ? 'bg-blue-100 text-blue-800' : '' }}
+                            {{ $material->category == 'WIP' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                            {{ $material->category == 'Finished Goods' ? 'bg-green-100 text-green-800' : '' }}
+                            {{ $material->category == 'Consumables' ? 'bg-purple-100 text-purple-800' : '' }}
+                            {{ $material->category == 'Tools' ? 'bg-gray-100 text-gray-800' : '' }}
+                        ">
+                            {{ $material->category }}
+                        </span>
+                    </div>
+                    <h3 class="font-semibold text-xs text-gray-900 mb-1 line-clamp-2">{{ $material->material_name }}</h3>
+                    <p class="text-xs text-gray-500 mb-2">{{ $material->material_code }}</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Stock:</span>
+                            <span class="font-semibold {{ $material->current_stock <= $material->minimum_stock ? 'text-red-600' : 'text-gray-900' }}">
+                                {{ number_format($material->current_stock, 2) }}
+                                @if($material->current_stock <= $material->minimum_stock)
+                                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Min:</span>
+                            <span class="text-gray-700">{{ number_format($material->minimum_stock, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Unit:</span>
+                            <span class="text-gray-700">{{ $material->unit_of_measure }}</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-gray-200">
+                        @if($material->is_active)
+                            <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle"></i> Active
+                            </span>
+                        @else
+                            <span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle"></i> Inactive
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="col-span-2 text-center text-gray-500 py-8">
+                <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+                <p>No stock data found</p>
+            </div>
+            @endforelse
+        </div>
+        
+        @if($materials->hasPages())
+        <div class="mt-4">
+            {{ $materials->links() }}
+        </div>
+        @endif
+    </div>
+    
+    <!-- Desktop Table View -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -269,11 +333,11 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
-    
-    <!-- Pagination -->
-    <div class="px-6 py-4 border-t border-gray-200">
-        {{ $materials->links() }}
+        
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-gray-200">
+            {{ $materials->links() }}
+        </div>
     </div>
 </div>
 

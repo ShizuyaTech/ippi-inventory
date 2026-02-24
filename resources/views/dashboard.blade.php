@@ -4,7 +4,7 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     <!-- Total Material IN -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -109,7 +109,33 @@
         <h3 class="text-lg font-semibold mb-4">
             <i class="fas fa-exclamation-circle mr-2 text-red-600"></i>Material Stock Minimum
         </h3>
-        <div class="overflow-x-auto">
+        
+        <!-- Mobile Card View -->
+        <div class="block md:hidden space-y-3">
+            @forelse($lowStockItems as $item)
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p class="font-medium text-sm text-gray-900 mb-2">{{ $item->material_name }}</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <p class="text-xs text-gray-500">Current Stock</p>
+                        <p class="text-sm font-bold text-red-600">{{ number_format($item->current_stock, 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Min Stock</p>
+                        <p class="text-sm font-medium text-gray-600">{{ number_format($item->minimum_stock, 2) }}</p>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="text-center text-gray-500 text-sm py-4">
+                <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                <p>Tidak ada material dengan stock minimum</p>
+            </div>
+            @endforelse
+        </div>
+        
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full">
                 <thead>
                     <tr class="border-b">
@@ -141,7 +167,51 @@
     <h3 class="text-lg font-semibold mb-4">
         <i class="fas fa-history mr-2 text-blue-600"></i>Transaksi Terakhir
     </h3>
-    <div class="overflow-x-auto">
+    
+    <!-- Mobile Card View -->
+    <div class="block md:hidden space-y-3">
+        @forelse($recentTransactions as $transaction)
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <p class="font-medium text-sm text-gray-900">{{ $transaction->transaction_number }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ $transaction->transaction_date->format('d/m/Y') }}</p>
+                </div>
+                @if($transaction->transaction_type == 'IN')
+                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800 font-medium">IN</span>
+                @elseif($transaction->transaction_type == 'OUT')
+                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-medium">OUT</span>
+                @else
+                    <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-medium">ADJ</span>
+                @endif
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <p class="text-xs text-gray-500">Material</p>
+                    <p class="text-sm text-gray-900">{{ $transaction->material->material_name }}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Quantity</p>
+                        <p class="text-sm font-semibold text-gray-900">{{ number_format($transaction->quantity, 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">User</p>
+                        <p class="text-sm text-gray-900">{{ $transaction->user->name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="text-center text-gray-500 text-sm py-8">
+            <i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i>
+            <p>Belum ada transaksi</p>
+        </div>
+        @endforelse
+    </div>
+    
+    <!-- Desktop Table View -->
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full">
             <thead>
                 <tr class="border-b">

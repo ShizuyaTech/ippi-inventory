@@ -4,11 +4,11 @@
 @section('page-title', 'Material Master')
 
 @section('content')
-<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div class="flex-1 w-full md:w-auto">
-        <form action="{{ route('materials.index') }}" method="GET" class="flex gap-2">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari material (kode, nama, kategori)..." 
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+        <form action="{{ route('materials.index') }}" method="GET" class="flex gap-2 flex-1 lg:max-w-md">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari material..." 
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                 <i class="fas fa-search"></i>
             </button>
@@ -18,9 +18,8 @@
                 </a>
             @endif
         </form>
-    </div>
-    
-    <div class="flex gap-2 flex-wrap">
+        
+        <div class="flex gap-2 flex-wrap">
         <a href="{{ route('materials.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center">
             <i class="fas fa-plus mr-2"></i>Tambah Material
         </a>
@@ -83,44 +82,114 @@
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow overflow-hidden">
+<!-- Mobile Card View -->
+<div class="block md:hidden p-4">
+    <div class="grid grid-cols-2 gap-3">
+        @forelse($materials as $material)
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-3">
+                <div class="mb-2">
+                    @if($material->is_active)
+                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Aktif</span>
+                    @else
+                        <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-800">Nonaktif</span>
+                    @endif
+                </div>
+                <h3 class="font-semibold text-xs text-gray-900 mb-1 line-clamp-2">{{ $material->material_name }}</h3>
+                <p class="text-xs text-gray-500 mb-2">{{ $material->material_code }}</p>
+                
+                <div class="space-y-1 text-xs mb-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Kategori</span>
+                        <span class="font-medium text-gray-900">{{ $material->category ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">UOM</span>
+                        <span class="font-medium text-gray-900">{{ $material->unit_of_measure }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Stock</span>
+                        <span class="font-bold {{ $material->isLowStock() ? 'text-red-600' : 'text-gray-900' }}">
+                            {{ number_format($material->current_stock, 2) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Min</span>
+                        <span class="text-gray-700">{{ number_format($material->minimum_stock, 2) }}</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200">
+                    <a href="{{ route('materials.show', $material) }}" class="text-blue-600 hover:text-blue-900">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ route('materials.edit', $material) }}" class="text-yellow-600 hover:text-yellow-900">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('materials.destroy', $material) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-2 text-center text-gray-500 py-8">
+            <i class="fas fa-inbox text-4xl mb-2 text-gray-300"></i>
+            <p>Belum ada data material</p>
+        </div>
+        @endforelse
+    </div>
+    
+    @if($materials->hasPages())
+    <div class="mt-4">
+        {{ $materials->links() }}
+    </div>
+    @endif
+</div>
+
+<!-- Desktop Table View -->
+<div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
-                    <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Material</th>
-                    <th class="hidden sm:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                    <th class="hidden lg:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
-                    <th class="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock</th>
-                    <th class="hidden md:table-cell px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Min Stock</th>
-                    <th class="hidden sm:table-cell px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-3 md:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Material</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Min Stock</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($materials as $material)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm font-medium">{{ $material->material_code }}</td>
-                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm">{{ $material->material_name }}</td>
-                    <td class="hidden sm:table-cell px-3 md:px-6 py-4 text-xs md:text-sm">{{ $material->category ?? '-' }}</td>
-                    <td class="hidden lg:table-cell px-3 md:px-6 py-4 text-xs md:text-sm">{{ $material->unit_of_measure }}</td>
-                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-right {{ $material->isLowStock() ? 'text-red-600 font-bold' : '' }}">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $material->material_code }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $material->material_name }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $material->category ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $material->unit_of_measure }}</td>
+                    <td class="px-6 py-4 text-sm text-right {{ $material->isLowStock() ? 'text-red-600 font-bold' : '' }}">
                         {{ number_format($material->current_stock, 2) }}
                     </td>
-                    <td class="hidden md:table-cell px-3 md:px-6 py-4 text-xs md:text-sm text-right">{{ number_format($material->minimum_stock, 2) }}</td>
-                    <td class="hidden sm:table-cell px-3 md:px-6 py-4 text-center">
+                    <td class="px-6 py-4 text-sm text-right">{{ number_format($material->minimum_stock, 2) }}</td>
+                    <td class="px-6 py-4 text-center">
                         @if($material->is_active)
                             <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Aktif</span>
                         @else
                             <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-800">Nonaktif</span>
                         @endif
                     </td>
-                    <td class="px-3 md:px-6 py-4 text-center whitespace-nowrap text-xs md:text-sm">
-                        <a href="{{ route('materials.show', $material) }}" class="text-blue-600 hover:text-blue-900 mr-2 md:mr-3">
+                    <td class="px-6 py-4 text-center whitespace-nowrap text-sm">
+                        <a href="{{ route('materials.show', $material) }}" class="text-blue-600 hover:text-blue-900 mr-3">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="{{ route('materials.edit', $material) }}" class="text-yellow-600 hover:text-yellow-900 mr-2 md:mr-3">
+                        <a href="{{ route('materials.edit', $material) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
                             <i class="fas fa-edit"></i>
                         </a>
                         <form action="{{ route('materials.destroy', $material) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
@@ -134,7 +203,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-3 md:px-6 py-4 text-center text-gray-500 text-xs md:text-sm">Belum ada data material</td>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">Belum ada data material</td>
                 </tr>
                 @endforelse
             </tbody>
