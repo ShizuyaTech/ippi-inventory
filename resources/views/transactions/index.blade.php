@@ -4,42 +4,45 @@
 @section('page-title', 'Stock Transaction')
 
 @section('content')
-<div class="mb-6 space-y-3">
+<div class="mb-6 px-4 md:px-6">
     <div class="flex gap-2 items-center">
-        <form action="{{ route('transactions.index') }}" method="GET" class="flex gap-2 flex-1">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari transaksi..." 
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        <!-- Search Form -->
+        <form action="{{ route('transactions.index') }}" method="GET" class="flex gap-1 flex-1 max-w-[35%] sm:max-w-xs lg:max-w-md">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari..." 
+                class="flex-1 min-w-0 px-2 lg:px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
             <input type="hidden" name="type" value="{{ request('type') }}">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Cari">
                 <i class="fas fa-search"></i>
             </button>
             @if(request('search'))
-                <a href="{{ route('transactions.index', ['type' => request('type')]) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                <a href="{{ route('transactions.index', ['type' => request('type')]) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Reset">
                     <i class="fas fa-times"></i>
                 </a>
             @endif
         </form>
         
-        <div class="flex gap-2">
+        <!-- Action Buttons -->
+        <div class="flex gap-1 sm:gap-1.5 lg:gap-2 flex-shrink-0">
+            <a href="{{ route('transactions.index', ['search' => request('search')]) }}" 
+               class="px-3 lg:px-4 py-2 rounded text-sm flex items-center {{ !request('type') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border' }}" title="Semua Transaksi">
+                <i class="fas fa-list"></i>
+                <span class="hidden lg:inline lg:ml-2">Semua</span>
+            </a>
             <a href="{{ route('transactions.index', ['type' => 'IN', 'search' => request('search')]) }}" 
-               class="px-3 py-2 rounded text-sm {{ request('type') == 'IN' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border' }}">
-                IN
+               class="px-3 lg:px-4 py-2 rounded text-sm flex items-center {{ request('type') == 'IN' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 border' }}" title="Material IN">
+                <i class="fas fa-arrow-down"></i>
+                <span class="hidden lg:inline lg:ml-2">IN</span>
             </a>
             <a href="{{ route('transactions.index', ['type' => 'OUT', 'search' => request('search')]) }}" 
-               class="px-3 py-2 rounded text-sm {{ request('type') == 'OUT' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border' }}">
-                OUT
+               class="px-3 lg:px-4 py-2 rounded text-sm flex items-center {{ request('type') == 'OUT' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border' }}" title="Material OUT">
+                <i class="fas fa-arrow-up"></i>
+                <span class="hidden lg:inline lg:ml-2">OUT</span>
+            </a>
+            <a href="{{ route('transactions.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded inline-flex items-center" title="Tambah Transaksi">
+                <i class="fas fa-plus"></i>
+                <span class="hidden lg:inline lg:ml-2">Transaksi</span>
             </a>
         </div>
-    </div>
-    
-    <div class="flex gap-2">
-        <a href="{{ route('transactions.index', ['search' => request('search')]) }}" 
-           class="px-4 py-2 rounded text-sm {{ !request('type') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border' }}">
-            Semua
-        </a>
-        <a href="{{ route('transactions.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded inline-flex items-center text-sm">
-            <i class="fas fa-plus mr-2"></i>Transaksi
-        </a>
     </div>
 </div>
 

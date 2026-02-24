@@ -4,23 +4,27 @@
 @section('page-title', 'Production Order')
 
 @section('content')
-<div class="mb-6">
+<div class="mb-6 px-4 md:px-6">
     <div class="flex gap-2 items-center">
-        <form action="{{ route('production-orders.index') }}" method="GET" class="flex gap-2 flex-1">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari PO..." 
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        <!-- Search Form -->
+        <form action="{{ route('production-orders.index') }}" method="GET" class="flex gap-1 flex-1 max-w-[50%] sm:max-w-xs lg:max-w-md">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari..." 
+                class="flex-1 min-w-0 px-2 lg:px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Cari">
                 <i class="fas fa-search"></i>
             </button>
             @if(request('search'))
-                <a href="{{ route('production-orders.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                <a href="{{ route('production-orders.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Reset">
                     <i class="fas fa-times"></i>
                 </a>
             @endif
         </form>
-        <div>
-            <a href="{{ route('production-orders.create') }}" class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm whitespace-nowrap inline-flex items-center">
-                <i class="fas fa-plus mr-1"></i>Prod. Order
+        
+        <!-- Action Button -->
+        <div class="flex-shrink-0">
+            <a href="{{ route('production-orders.create') }}" class="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 inline-flex items-center" title="Tambah Production Order">
+                <i class="fas fa-plus"></i>
+                <span class="hidden lg:inline lg:ml-2">Prod. Order</span>
             </a>
         </div>
     </div>
