@@ -111,11 +111,12 @@
         </h3>
         
         <!-- Mobile Card View -->
-        <div class="block md:hidden space-y-3">
+        <div class="block md:hidden">
+            <div class="grid grid-cols-2 gap-3">
             @forelse($lowStockItems as $item)
             <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p class="font-medium text-sm text-gray-900 mb-2">{{ $item->material_name }}</p>
-                <div class="grid grid-cols-2 gap-2">
+                <p class="font-medium text-xs text-gray-900 mb-2 line-clamp-2">{{ $item->material_name }}</p>
+                <div class="space-y-1">
                     <div>
                         <p class="text-xs text-gray-500">Current Stock</p>
                         <p class="text-sm font-bold text-red-600">{{ number_format($item->current_stock, 2) }}</p>
@@ -127,11 +128,12 @@
                 </div>
             </div>
             @empty
-            <div class="text-center text-gray-500 text-sm py-4">
+            <div class="col-span-2 text-center text-gray-500 text-sm py-4">
                 <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
                 <p>Tidak ada material dengan stock minimum</p>
             </div>
             @endforelse
+            </div>
         </div>
         
         <!-- Desktop Table View -->
@@ -169,45 +171,47 @@
     </h3>
     
     <!-- Mobile Card View -->
-    <div class="block md:hidden space-y-3">
+    <div class="block md:hidden">
+        <div class="grid grid-cols-2 gap-3">
         @forelse($recentTransactions as $transaction)
-        <div class="bg-white border border-gray-200 rounded-lg p-4">
-            <div class="flex justify-between items-start mb-3">
-                <div>
-                    <p class="font-medium text-sm text-gray-900">{{ $transaction->transaction_number }}</p>
+        <div class="bg-white border border-gray-200 rounded-lg p-3">
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-xs text-gray-900 truncate">{{ $transaction->transaction_number }}</p>
                     <p class="text-xs text-gray-500 mt-1">{{ $transaction->transaction_date->format('d/m/Y') }}</p>
                 </div>
                 @if($transaction->transaction_type == 'IN')
-                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800 font-medium">IN</span>
+                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800 font-medium ml-1 flex-shrink-0">IN</span>
                 @elseif($transaction->transaction_type == 'OUT')
-                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-medium">OUT</span>
+                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-medium ml-1 flex-shrink-0">OUT</span>
                 @else
-                    <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-medium">ADJ</span>
+                    <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-medium ml-1 flex-shrink-0">ADJ</span>
                 @endif
             </div>
             <div class="space-y-2">
                 <div>
                     <p class="text-xs text-gray-500">Material</p>
-                    <p class="text-sm text-gray-900">{{ $transaction->material->material_name }}</p>
+                    <p class="text-xs text-gray-900 line-clamp-2">{{ $transaction->material->material_name }}</p>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="flex justify-between">
                     <div>
-                        <p class="text-xs text-gray-500">Quantity</p>
+                        <p class="text-xs text-gray-500">Qty</p>
                         <p class="text-sm font-semibold text-gray-900">{{ number_format($transaction->quantity, 2) }}</p>
                     </div>
-                    <div>
+                    <div class="text-right">
                         <p class="text-xs text-gray-500">User</p>
-                        <p class="text-sm text-gray-900">{{ $transaction->user->name }}</p>
+                        <p class="text-xs text-gray-900 truncate">{{ $transaction->user->name }}</p>
                     </div>
                 </div>
             </div>
         </div>
         @empty
-        <div class="text-center text-gray-500 text-sm py-8">
+        <div class="col-span-2 text-center text-gray-500 text-sm py-8">
             <i class="fas fa-inbox text-gray-300 text-3xl mb-2"></i>
             <p>Belum ada transaksi</p>
         </div>
         @endforelse
+        </div>
     </div>
     
     <!-- Desktop Table View -->

@@ -4,10 +4,10 @@
 @section('page-title', 'Customer Master')
 
 @section('content')
-<div class="mb-6">
+<div class="mb-6 px-4 md:px-6">
     <div class="flex gap-2 items-center">
         <!-- Search Form -->
-        <form action="{{ route('customers.index') }}" method="GET" class="flex gap-1 flex-1">
+        <form action="{{ route('customers.index') }}" method="GET" class="flex gap-1 flex-1 max-w-[40%] sm:max-w-xs lg:max-w-md">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari..." 
                 class="flex-1 min-w-0 px-2 lg:px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded flex-shrink-0" title="Cari">
@@ -21,7 +21,7 @@
         </form>
         
         <!-- Action Buttons -->
-        <div class="flex gap-1 lg:gap-2 flex-shrink-0">
+        <div class="flex gap-1 sm:gap-1.5 lg:gap-2 flex-shrink-0">
             <a href="{{ route('customers.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 lg:px-4 py-2 rounded inline-flex items-center" title="Tambah Customer">
                 <i class="fas fa-plus"></i>
                 <span class="hidden lg:inline lg:ml-2">Tambah Customer</span>
