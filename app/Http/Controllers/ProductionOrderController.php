@@ -178,6 +178,7 @@ class ProductionOrderController extends Controller
             'outputs' => 'required|array',
             'outputs.*.id' => 'required|exists:production_order_outputs,id',
             'outputs.*.actual_quantity' => 'required|numeric|min:0',
+            'outputs.*.qty_ng' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -189,18 +190,20 @@ class ProductionOrderController extends Controller
             foreach ($validated['outputs'] as $outputData) {
                 $output = ProductionOrderOutput::find($outputData['id']);
                 $output->actual_quantity = $outputData['actual_quantity'];
+                $output->qty_ng = $outputData['qty_ng'] ?? 0;
                 $output->save();
 
                 $totalExpected += $output->expected_quantity;
                 $totalActual += $output->actual_quantity;
 
-                // Create Stock IN transaction for output material
-                if ($output->actual_quantity > 0) {
+                // Get output material and determine warehouse based on category
+                $outputMaterial = \App\Models\Material::find($output->output_material_id);
+                $warehouse = \App\Models\Warehouse::getForMaterialCategory($outputMaterial->category ?? 'General');
+
+                // Create Stock IN transaction for OK parts only (actual_quantity - qty_ng)
+                $qtyOk = $output->getQtyOk();
+                if ($qtyOk > 0) {
                     $transactionNumber = 'TRX-' . date('YmdHis') . '-' . rand(1000, 9999);
-                    
-                    // Get output material and determine warehouse based on category
-                    $outputMaterial = \App\Models\Material::find($output->output_material_id);
-                    $warehouse = \App\Models\Warehouse::getForMaterialCategory($outputMaterial->category ?? 'General');
                     
                     StockTransaction::create([
                         'transaction_number' => $transactionNumber,
@@ -208,13 +211,45 @@ class ProductionOrderController extends Controller
                         'transaction_type' => 'IN',
                         'material_id' => $output->output_material_id,
                         'warehouse_id' => $warehouse?->id,
-                        'quantity' => $output->actual_quantity,
+                        'quantity' => $qtyOk,
                         'reference_number' => $productionOrder->po_number,
-                        'notes' => 'Hasil produksi - ' . $productionOrder->po_number . ($warehouse ? ' (Gudang: ' . $warehouse->warehouse_name . ')' : ''),
+                        'notes' => sprintf(
+                            'Hasil produksi OK - %s (Total: %.2f, OK: %.2f, NG: %.2f)%s',
+                            $productionOrder->po_number,
+                            $output->actual_quantity,
+                            $qtyOk,
+                            $output->qty_ng,
+                            $warehouse ? ' (Gudang: ' . $warehouse->warehouse_name . ')' : ''
+                        ),
                         'user_id' => Auth::id(),
                     ]);
 
                     // Stock automatically updated by StockTransaction observer
+                }
+
+                // Create Stock transaction for NG parts (for tracking and loss recording)
+                if ($output->qty_ng > 0) {
+                    $transactionNumber = 'TRX-' . date('YmdHis') . '-' . rand(1000, 9999);
+                    
+                    StockTransaction::create([
+                        'transaction_number' => $transactionNumber,
+                        'transaction_date' => now(),
+                        'transaction_type' => 'ADJUSTMENT',
+                        'material_id' => $output->output_material_id,
+                        'warehouse_id' => $warehouse?->id,
+                        'quantity' => -$output->qty_ng, // Negative untuk indicate loss/scrap
+                        'reference_number' => $productionOrder->po_number . '-NG',
+                        'notes' => sprintf(
+                            'NG/Reject dari produksi - %s (Qty NG: %.2f, Quality Rate: %.1f%%)%s',
+                            $productionOrder->po_number,
+                            $output->qty_ng,
+                            $output->getQualityRate(),
+                            $warehouse ? ' (Gudang: ' . $warehouse->warehouse_name . ')' : ''
+                        ),
+                        'user_id' => Auth::id(),
+                    ]);
+
+                    // This will reduce the stock count by qty_ng through observer
                 }
             }
 
