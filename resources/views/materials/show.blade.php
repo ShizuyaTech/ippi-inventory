@@ -326,7 +326,15 @@ function toggleEditForm(id) {
     const form = document.getElementById('editForm' + id);
     form.classList.toggle('hidden');
 }
+</script>
 
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+
+<!-- Choices.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+
+<script>
 // Initialize Choices.js for searchable select
 let choicesInstance = null;
 
@@ -345,10 +353,4 @@ function initializeChoices() {
     }
 }
 </script>
-
-<!-- Choices.js CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
-
-<!-- Choices.js JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
 @endsection
