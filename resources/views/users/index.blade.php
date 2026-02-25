@@ -222,7 +222,7 @@
 
     @if($users->hasPages())
     <div class="px-6 py-4 border-t border-gray-200">
-        {{ $users->links() }}
+        {{ $users->onEachSide(2)->links() }}
     </div>
     @endif
 </div>

@@ -140,7 +140,7 @@
         
         @if($suppliers->hasPages())
         <div class="pt-4">
-            {{ $suppliers->links() }}
+            {{ $suppliers->onEachSide(2)->links() }}
         </div>
         @endif
     </div>
@@ -196,7 +196,7 @@
         </table>
         
         <div class="px-6 py-4 bg-gray-50">
-            {{ $suppliers->links() }}
+            {{ $suppliers->onEachSide(2)->links() }}
         </div>
     </div>
 </div>

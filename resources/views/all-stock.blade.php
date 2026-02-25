@@ -187,7 +187,7 @@
         
         @if($materials->hasPages())
         <div class="mt-4">
-            {{ $materials->links() }}
+            {{ $materials->onEachSide(2)->links() }}
         </div>
         @endif
     </div>
@@ -336,7 +336,7 @@
         
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-gray-200">
-            {{ $materials->links() }}
+            {{ $materials->onEachSide(2)->links() }}
         </div>
     </div>
 </div>
