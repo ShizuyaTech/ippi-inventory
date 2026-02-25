@@ -120,7 +120,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Material Output</label>
-                        <select name="output_material_id" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                        <select name="output_material_id" id="materialOutputSelect" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                             <option value="">Pilih Material</option>
                             @foreach($allMaterials->where('id', '!=', $material->id) as $mat)
                                 <option value="{{ $mat->id }}">{{ $mat->material_code }} - {{ $mat->material_name }} ({{ $mat->unit_of_measure }})</option>
@@ -129,11 +129,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Output per {{ $material->unit_of_measure }}</label>
-                        <input type="number" name="quantity_per_unit" step="0.01" min="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                        <input type="number" name="quantity_per_unit" step="0.01" min="0.01" class="w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
-                        <input type="text" name="notes" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <input type="text" name="notes" class="w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                 </div>
                 <div class="mt-4 flex gap-2">
@@ -265,11 +265,55 @@
 function toggleOutputForm() {
     const form = document.getElementById('outputForm');
     form.classList.toggle('hidden');
+    
+    // Initialize or destroy Choices.js when form is toggled
+    if (!form.classList.contains('hidden')) {
+        initializeChoices();
+    }
 }
 
 function toggleEditForm(id) {
     const form = document.getElementById('editForm' + id);
     form.classList.toggle('hidden');
+}
+</script>
+
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+
+<!-- Custom CSS to match input heights -->
+<style>
+    .choices__inner {
+        min-height: 42px !important;
+        padding: 0.5rem 0.75rem !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .choices__list--single {
+        padding: 0 !important;
+    }
+</style>
+
+<!-- Choices.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+
+<script>
+// Initialize Choices.js for searchable select
+let choicesInstance = null;
+
+function initializeChoices() {
+    const selectElement = document.getElementById('materialOutputSelect');
+    if (selectElement && !choicesInstance) {
+        choicesInstance = new Choices(selectElement, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Ketik untuk mencari...',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            itemSelectText: 'Klik untuk pilih',
+            removeItemButton: false,
+            shouldSort: false,
+            position: 'bottom',
+        });
+    }
 }
 </script>
 @endsection

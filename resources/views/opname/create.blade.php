@@ -84,14 +84,48 @@
 </div>
 
 @push('scripts')
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+
+<!-- Custom CSS to match input heights -->
+<style>
+    .choices__inner {
+        min-height: 42px !important;
+        padding: 0.5rem 0.75rem !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .choices__list--single {
+        padding: 0 !important;
+    }
+</style>
+
+<!-- Choices.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+
 <script>
-    document.getElementById('material_id').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const stock = selectedOption.getAttribute('data-stock') || '0.00';
-        const uom = selectedOption.getAttribute('data-uom') || '';
+    // Initialize Choices.js for searchable material select
+    const materialSelect = document.getElementById('material_id');
+    if (materialSelect) {
+        const choices = new Choices(materialSelect, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Ketik untuk mencari...',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            itemSelectText: 'Klik untuk pilih',
+            removeItemButton: false,
+            shouldSort: false,
+            position: 'bottom',
+        });
         
-        document.getElementById('system_stock').textContent = parseFloat(stock).toFixed(2) + ' ' + uom;
-    });
+        // Handle change event for updating system stock
+        materialSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const stock = selectedOption.getAttribute('data-stock') || '0.00';
+            const uom = selectedOption.getAttribute('data-uom') || '';
+            
+            document.getElementById('system_stock').textContent = parseFloat(stock).toFixed(2) + ' ' + uom;
+        });
+    }
 </script>
 @endpush
 @endsection

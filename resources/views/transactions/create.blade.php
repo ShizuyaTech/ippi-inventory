@@ -97,7 +97,7 @@
                             <!-- Initial Row -->
                             <tr class="item-row">
                                 <td class="border px-4 py-2">
-                                    <select name="items[0][material_id]" required
+                                    <select name="items[0][material_id]" class="material-select" required
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <option value="">Pilih Material</option>
                                         @foreach($materials as $material)
@@ -145,9 +145,57 @@
     </div>
 </div>
 
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+
+<!-- Custom CSS to match input heights -->
+<style>
+    .choices__inner {
+        min-height: 42px !important;
+        padding: 0.5rem 0.75rem !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .choices__list--single {
+        padding: 0 !important;
+    }
+</style>
+
+<!-- Choices.js JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+
 <script>
 let itemCounter = 1;
 const materialsData = @json($materials);
+const choicesInstances = [];
+
+// Initialize Choices.js for initial row
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChoicesForRow(0);
+});
+
+function initializeChoicesForRow(index) {
+    const selects = document.querySelectorAll('.material-select');
+    const selectElement = selects[index];
+    
+    if (selectElement && !selectElement.dataset.choicesInitialized) {
+        const choices = new Choices(selectElement, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Ketik untuk mencari...',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            itemSelectText: 'Klik untuk pilih',
+            removeItemButton: false,
+            shouldSort: false,
+            position: 'bottom',
+        });
+        
+        selectElement.dataset.choicesInitialized = 'true';
+        choicesInstances.push({
+            element: selectElement,
+            instance: choices
+        });
+    }
+}
 
 function addItemRow() {
     const tbody = document.getElementById('itemsTableBody');
@@ -161,7 +209,7 @@ function addItemRow() {
     
     newRow.innerHTML = `
         <td class="border px-4 py-2">
-            <select name="items[${itemCounter}][material_id]" required
+            <select name="items[${itemCounter}][material_id]" class="material-select" required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 ${materialsOptions}
             </select>
@@ -183,12 +231,26 @@ function addItemRow() {
     
     tbody.appendChild(newRow);
     itemCounter++;
+    
+    // Initialize Choices.js for the new row
+    const allSelects = document.querySelectorAll('.material-select');
+    initializeChoicesForRow(allSelects.length - 1);
 }
 
 function removeItemRow(button) {
     const tbody = document.getElementById('itemsTableBody');
     if (tbody.children.length > 1) {
-        button.closest('tr').remove();
+        const row = button.closest('tr');
+        const selectElement = row.querySelector('.material-select');
+        
+        // Destroy Choices.js instance for this row
+        const instanceIndex = choicesInstances.findIndex(item => item.element === selectElement);
+        if (instanceIndex > -1) {
+            choicesInstances[instanceIndex].instance.destroy();
+            choicesInstances.splice(instanceIndex, 1);
+        }
+        
+        row.remove();
     } else {
         alert('Minimal harus ada 1 item!');
     }
