@@ -83,7 +83,7 @@
                     </button>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-visible">
                     <table class="min-w-full border border-gray-300">
                         <thead class="bg-gray-100">
                             <tr>
@@ -97,15 +97,14 @@
                             <!-- Initial Row -->
                             <tr class="item-row">
                                 <td class="border px-4 py-2">
-                                    <select name="items[0][material_id]" class="material-select" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="">Pilih Material</option>
-                                        @foreach($materials as $material)
-                                            <option value="{{ $material->id }}">
-                                                {{ $material->material_code }} - {{ $material->material_name }} ({{ number_format($material->current_stock, 2) }} {{ $material->unit_of_measure }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <div class="autocomplete-wrapper">
+                                        <input type="text" 
+                                            class="material-search w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                            placeholder="Ketik kode atau nama material..."
+                                            autocomplete="off"
+                                            data-index="0">
+                                        <input type="hidden" name="items[0][material_id]" class="material-id" required>
+                                    </div>
                                 </td>
                                 <td class="border px-4 py-2">
                                     <input type="number" name="items[0][quantity]" step="0.01" required
@@ -145,74 +144,235 @@
     </div>
 </div>
 
-<!-- Choices.js CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+<!-- Autocomplete dropdown container (outside table, for proper positioning) -->
+<div id="autocompleteDropdown" class="autocomplete-dropdown-container" style="display: none;"></div>
 
-<!-- Custom CSS to match input heights -->
+<!-- Choices.js CSS -->
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css"> -->
+
+<!-- Custom CSS for autocomplete -->
 <style>
-    .choices__inner {
-        min-height: 42px !important;
-        padding: 0.5rem 0.75rem !important;
-        display: flex !important;
-        align-items: center !important;
+    .autocomplete-wrapper {
+        position: relative;
     }
-    .choices__list--single {
-        padding: 0 !important;
+    
+    .autocomplete-dropdown-container {
+        position: fixed;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 9999;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        min-width: 300px;
+    }
+    
+    .autocomplete-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+    
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .autocomplete-no-results {
+        padding: 10px 12px;
+        color: #6b7280;
+        font-size: 14px;
+        text-align: center;
     }
 </style>
 
 <!-- Choices.js JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script> -->
 
 <script>
 let itemCounter = 1;
 const materialsData = @json($materials);
-const choicesInstances = [];
+let currentActiveInput = null;
 
-// Initialize Choices.js for initial row
+// Initialize autocomplete for all material search inputs
 document.addEventListener('DOMContentLoaded', function() {
-    initializeChoicesForRow(0);
+    console.log('Initializing autocomplete...');
+    console.log('Materials count:', materialsData.length);
+    initializeAllAutocomplete();
 });
 
-function initializeChoicesForRow(index) {
-    const selects = document.querySelectorAll('.material-select');
-    const selectElement = selects[index];
+function initializeAllAutocomplete() {
+    const searchInputs = document.querySelectorAll('.material-search');
     
-    if (selectElement && !selectElement.dataset.choicesInitialized) {
-        const choices = new Choices(selectElement, {
-            searchEnabled: true,
-            searchPlaceholderValue: 'Ketik untuk mencari...',
-            noResultsText: 'Tidak ada hasil ditemukan',
-            itemSelectText: 'Klik untuk pilih',
-            removeItemButton: false,
-            shouldSort: false,
-            position: 'bottom',
+    searchInputs.forEach((input) => {
+        if (!input.dataset.autocompleteInitialized) {
+            setupAutocomplete(input);
+            input.dataset.autocompleteInitialized = 'true';
+        }
+    });
+}
+
+function setupAutocomplete(input) {
+    const wrapper = input.closest('.autocomplete-wrapper');
+    const dropdown = document.getElementById('autocompleteDropdown');
+    const hiddenInput = wrapper.querySelector('.material-id');
+    let currentFocus = -1;
+    
+    // Filter on input
+    input.addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        currentFocus = -1;
+        currentActiveInput = this;
+        
+        // Clear hidden input when typing
+        hiddenInput.value = '';
+        
+        if (searchText.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+        
+        // Filter materials
+        const filtered = materialsData.filter(material => {
+            const code = material.material_code.toLowerCase();
+            const name = material.material_name.toLowerCase();
+            return code.includes(searchText) || name.includes(searchText);
         });
         
-        selectElement.dataset.choicesInitialized = 'true';
-        choicesInstances.push({
-            element: selectElement,
-            instance: choices
+        displayResults(filtered, dropdown, input, hiddenInput);
+        positionDropdown(input, dropdown);
+    });
+    
+    // Show dropdown on focus if there's text
+    input.addEventListener('focus', function() {
+        currentActiveInput = this;
+        if (this.value.length > 0) {
+            const searchText = this.value.toLowerCase();
+            const filtered = materialsData.filter(material => {
+                const code = material.material_code.toLowerCase();
+                const name = material.material_name.toLowerCase();
+                return code.includes(searchText) || name.includes(searchText);
+            });
+            displayResults(filtered, dropdown, input, hiddenInput);
+            positionDropdown(input, dropdown);
+        }
+    });
+    
+    // Keyboard navigation
+    input.addEventListener('keydown', function(e) {
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentFocus++;
+            if (currentFocus >= items.length) currentFocus = 0;
+            setActive(items, currentFocus);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentFocus--;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            setActive(items, currentFocus);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentFocus > -1 && items[currentFocus]) {
+                items[currentFocus].click();
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function positionDropdown(input, dropdown) {
+    const rect = input.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 4) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+}
+
+function displayResults(materials, dropdown, input, hiddenInput) {
+    dropdown.innerHTML = '';
+    
+    if (materials.length === 0) {
+        dropdown.innerHTML = '<div class="autocomplete-no-results">Tidak ada material ditemukan</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+    
+    materials.forEach(material => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = `${material.material_code} - ${material.material_name} (${parseFloat(material.current_stock).toFixed(2)} ${material.unit_of_measure})`;
+        item.dataset.id = material.id;
+        item.dataset.text = `${material.material_code} - ${material.material_name}`;
+        
+        item.addEventListener('click', function() {
+            input.value = this.dataset.text;
+            hiddenInput.value = this.dataset.id;
+            dropdown.style.display = 'none';
         });
+        
+        dropdown.appendChild(item);
+    });
+    
+    dropdown.style.display = 'block';
+}
+
+function setActive(items, index) {
+    items.forEach(item => item.classList.remove('active'));
+    if (items[index]) {
+        items[index].classList.add('active');
+        items[index].scrollIntoView({ block: 'nearest' });
     }
 }
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('autocompleteDropdown');
+    if (currentActiveInput && !currentActiveInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
+// Reposition dropdown on scroll
+window.addEventListener('scroll', function() {
+    const dropdown = document.getElementById('autocompleteDropdown');
+    if (dropdown.style.display === 'block' && currentActiveInput) {
+        positionDropdown(currentActiveInput, dropdown);
+    }
+}, true);
+
+// Reposition dropdown on window resize
+window.addEventListener('resize', function() {
+    const dropdown = document.getElementById('autocompleteDropdown');
+    if (dropdown.style.display === 'block' && currentActiveInput) {
+        positionDropdown(currentActiveInput, dropdown);
+    }
+});
 
 function addItemRow() {
     const tbody = document.getElementById('itemsTableBody');
     const newRow = document.createElement('tr');
     newRow.className = 'item-row';
     
-    let materialsOptions = '<option value="">Pilih Material</option>';
-    materialsData.forEach(material => {
-        materialsOptions += `<option value="${material.id}">${material.material_code} - ${material.material_name} (${parseFloat(material.current_stock).toFixed(2)} ${material.unit_of_measure})</option>`;
-    });
-    
     newRow.innerHTML = `
         <td class="border px-4 py-2">
-            <select name="items[${itemCounter}][material_id]" class="material-select" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                ${materialsOptions}
-            </select>
+            <div class="autocomplete-wrapper">
+                <input type="text" 
+                    class="material-search w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="Ketik kode atau nama material..."
+                    autocomplete="off"
+                    data-index="${itemCounter}">
+                <input type="hidden" name="items[${itemCounter}][material_id]" class="material-id" required>
+            </div>
         </td>
         <td class="border px-4 py-2">
             <input type="number" name="items[${itemCounter}][quantity]" step="0.01" required
@@ -232,25 +392,14 @@ function addItemRow() {
     tbody.appendChild(newRow);
     itemCounter++;
     
-    // Initialize Choices.js for the new row
-    const allSelects = document.querySelectorAll('.material-select');
-    initializeChoicesForRow(allSelects.length - 1);
+    // Initialize autocomplete for the new row
+    initializeAllAutocomplete();
 }
 
 function removeItemRow(button) {
     const tbody = document.getElementById('itemsTableBody');
     if (tbody.children.length > 1) {
-        const row = button.closest('tr');
-        const selectElement = row.querySelector('.material-select');
-        
-        // Destroy Choices.js instance for this row
-        const instanceIndex = choicesInstances.findIndex(item => item.element === selectElement);
-        if (instanceIndex > -1) {
-            choicesInstances[instanceIndex].instance.destroy();
-            choicesInstances.splice(instanceIndex, 1);
-        }
-        
-        row.remove();
+        button.closest('tr').remove();
     } else {
         alert('Minimal harus ada 1 item!');
     }

@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Admin',
             'email' => 'admin@materialcontrol.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('ippi54321'),
             'role' => 'admin',
             'role_id' => $adminRole ? $adminRole->id : null,
         ]);
@@ -46,7 +46,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Staff Warehouse',
             'email' => 'staff@materialcontrol.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('ippi54321'),
             'role' => 'staff',
             'role_id' => $staffRole ? $staffRole->id : null,
         ]);
@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Budi Santoso - PT. Steel Indonesia',
             'email' => 'supplier@steelindonesia.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('ippi54321'),
             'role' => 'supplier',
             'role_id' => $supplierRole ? $supplierRole->id : null,
             'supplier_id' => $supplierModels[0]->id,
@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Andi Wijaya - CV. Metal Jaya',
             'email' => 'supplier@metaljaya.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('ippi54321'),
             'role' => 'supplier',
             'role_id' => $supplierRole ? $supplierRole->id : null,
             'supplier_id' => $supplierModels[1]->id,
@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Siti Rahman - PT. Prima Material',
             'email' => 'supplier@primamaterial.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('ippi54321'),
             'role' => 'supplier',
             'role_id' => $supplierRole ? $supplierRole->id : null,
             'supplier_id' => $supplierModels[2]->id,

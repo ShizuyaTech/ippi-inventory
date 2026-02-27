@@ -12,15 +12,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Raw Material (Sumber) *</label>
-                    <select name="source_material_id" id="sourceMaterial" required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Pilih Raw Material</option>
-                        @foreach($sourceMaterials as $material)
-                            <option value="{{ $material->id }}" data-stock="{{ $material->current_stock }}" data-unit="{{ $material->unit_of_measure }}">
-                                {{ $material->material_code }} - {{ $material->material_name }} (Stock: {{ number_format($material->current_stock, 2) }} {{ $material->unit_of_measure }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" 
+                            id="sourceMaterialSearch"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            placeholder="Ketik kode atau nama material..."
+                            autocomplete="off">
+                        <input type="hidden" name="source_material_id" id="sourceMaterial" required>
+                    </div>
                     @error('source_material_id')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -87,19 +86,207 @@
     </div>
 </div>
 
+<!-- Autocomplete dropdown container -->
+<div id="autocompleteDropdown" class="autocomplete-dropdown-container" style="display: none;"></div>
+
+<!-- Autocomplete CSS -->
+<style>
+    .autocomplete-wrapper {
+        position: relative;
+    }
+    
+    .autocomplete-dropdown-container {
+        position: fixed;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 9999;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        min-width: 300px;
+    }
+    
+    .autocomplete-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+    
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .autocomplete-no-results {
+        padding: 10px 12px;
+        color: #6b7280;
+        font-size: 14px;
+        text-align: center;
+    }
+</style>
+
 <script>
+const sourceMaterialsData = @json($sourceMaterials);
+
 document.addEventListener('DOMContentLoaded', function() {
-    const sourceMaterialSelect = document.getElementById('sourceMaterial');
+    const sourceMaterialInput = document.getElementById('sourceMaterialSearch');
+    const sourceMaterialHidden = document.getElementById('sourceMaterial');
     const sourceQuantityInput = document.getElementById('sourceQuantity');
     const outputsContainer = document.getElementById('outputsContainer');
     const noOutputsWarning = document.getElementById('noOutputsWarning');
     const submitBtn = document.getElementById('submitBtn');
     const unitText = document.getElementById('unitText');
+    const dropdown = document.getElementById('autocompleteDropdown');
+    let currentMaterialData = null;
+    let currentFocus = -1;
+    
+    // Setup autocomplete
+    sourceMaterialInput.addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        currentFocus = -1;
+        
+        // Clear hidden input and material data when typing
+        sourceMaterialHidden.value = '';
+        currentMaterialData = null;
+        
+        if (searchText.length === 0) {
+            dropdown.style.display = 'none';
+            updateOutputs();
+            return;
+        }
+        
+        // Filter materials
+        const filtered = sourceMaterialsData.filter(material => {
+            const code = material.material_code.toLowerCase();
+            const name = material.material_name.toLowerCase();
+            return code.includes(searchText) || name.includes(searchText);
+        });
+        
+        displayAutocompleteResults(filtered);
+        positionDropdown(sourceMaterialInput, dropdown);
+    });
+    
+    // Show dropdown on focus if there's text
+    sourceMaterialInput.addEventListener('focus', function() {
+        if (this.value.length > 0 && !sourceMaterialHidden.value) {
+            const searchText = this.value.toLowerCase();
+            const filtered = sourceMaterialsData.filter(material => {
+                const code = material.material_code.toLowerCase();
+                const name = material.material_name.toLowerCase();
+                return code.includes(searchText) || name.includes(searchText);
+            });
+            displayAutocompleteResults(filtered);
+            positionDropdown(sourceMaterialInput, dropdown);
+        }
+    });
+    
+    // Keyboard navigation
+    sourceMaterialInput.addEventListener('keydown', function(e) {
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentFocus++;
+            if (currentFocus >= items.length) currentFocus = 0;
+            setActive(items, currentFocus);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentFocus--;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            setActive(items, currentFocus);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentFocus > -1 && items[currentFocus]) {
+                items[currentFocus].click();
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!sourceMaterialInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Reposition on scroll/resize
+    window.addEventListener('scroll', function() {
+        if (dropdown.style.display === 'block') {
+            positionDropdown(sourceMaterialInput, dropdown);
+        }
+    }, true);
+    
+    window.addEventListener('resize', function() {
+        if (dropdown.style.display === 'block') {
+            positionDropdown(sourceMaterialInput, dropdown);
+        }
+    });
+    
+    function positionDropdown(input, dropdown) {
+        const rect = input.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 4) + 'px';
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.width = rect.width + 'px';
+    }
+    
+    function displayAutocompleteResults(materials) {
+        dropdown.innerHTML = '';
+        
+        if (materials.length === 0) {
+            dropdown.innerHTML = '<div class="autocomplete-no-results">Tidak ada material ditemukan</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+        
+        materials.forEach(material => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-item';
+            item.textContent = `${material.material_code} - ${material.material_name} (Stock: ${parseFloat(material.current_stock).toFixed(2)} ${material.unit_of_measure})`;
+            item.dataset.id = material.id;
+            item.dataset.text = `${material.material_code} - ${material.material_name}`;
+            item.dataset.stock = material.current_stock;
+            item.dataset.unit = material.unit_of_measure;
+            
+            item.addEventListener('click', function() {
+                sourceMaterialInput.value = this.dataset.text;
+                sourceMaterialHidden.value = this.dataset.id;
+                currentMaterialData = {
+                    id: this.dataset.id,
+                    stock: this.dataset.stock,
+                    unit: this.dataset.unit
+                };
+                dropdown.style.display = 'none';
+                updateOutputs();
+            });
+            
+            dropdown.appendChild(item);
+        });
+        
+        dropdown.style.display = 'block';
+    }
+    
+    function setActive(items, index) {
+        items.forEach(item => item.classList.remove('active'));
+        if (items[index]) {
+            items[index].classList.add('active');
+            items[index].scrollIntoView({ block: 'nearest' });
+        }
+    }
 
     function updateOutputs() {
-        const materialId = sourceMaterialSelect.value;
+        const materialId = sourceMaterialHidden.value;
         const quantity = parseFloat(sourceQuantityInput.value) || 0;
-        const unit = sourceMaterialSelect.selectedOptions[0]?.dataset.unit || 'unit';
+        const unit = currentMaterialData?.unit || 'unit';
         unitText.textContent = unit;
 
         if (!materialId || quantity <= 0) {
@@ -173,7 +360,6 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = checkedBoxes.length === 0;
     }
 
-    sourceMaterialSelect.addEventListener('change', updateOutputs);
     sourceQuantityInput.addEventListener('input', updateOutputs);
 
     // Form submission - remove unchecked outputs
